@@ -1,0 +1,16 @@
+{
+  "name": "vein-atm-fyp",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "dev:backend": "npm run start:dev --workspace vein-atm-backend",
+    "dev:frontend": "npm run dev --workspace vein-atm-frontend",
+    "build:backend": "npm run build --workspace vein-atm-backend",
+    "build:frontend": "npm run build --workspace vein-atm-frontend"
+  }
+}
