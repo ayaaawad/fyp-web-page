@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-base: #e8fbff;
+  --bg-aurora: #c8f6ec;
+  --bg-sun: #ffe8bf;
+  --bg-panel: rgba(255, 255, 255, 0.78);
+  --line-glow: rgba(0, 152, 163, 0.45);
+  --text-main: #132338;
+  --text-muted: #415b76;
+  --line-soft: rgba(12, 121, 160, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  color: var(--text-main);
+  background:
+    radial-gradient(1200px 900px at 84% 12%, rgba(255, 182, 99, 0.4), transparent 62%),
+    radial-gradient(1000px 760px at 8% 90%, rgba(39, 214, 193, 0.36), transparent 60%),
+    linear-gradient(128deg, var(--bg-base), var(--bg-aurora) 48%, var(--bg-sun));
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image:
+    linear-gradient(120deg, rgba(14, 37, 52, 0.26), rgba(35, 84, 120, 0.1)),
+    url('/images/fyp-background.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.7;
+  filter: saturate(1.08) contrast(1.06) brightness(1.08);
+  transform: scale(1.02);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px),
+    radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.35), transparent 32%),
+    radial-gradient(circle at 88% 78%, rgba(255, 226, 162, 0.4), transparent 26%);
+  background-size: 42px 42px, 42px 42px, auto, auto;
+  opacity: 0.58;
+  pointer-events: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 2rem 1rem 3rem;
+}
+
+.panel {
+  border-radius: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: var(--bg-panel);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 16px 36px rgba(9, 39, 67, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  animation: panel-rise 480ms ease both;
+}
+
+.input,
+.select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(25, 112, 141, 0.32);
+  color: var(--text-main);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.input:focus,
+.select:focus {
+  outline: 2px solid var(--line-glow);
+  outline-offset: 0;
+}
+
+.btn {
+  border: 1px solid rgba(0, 146, 148, 0.45);
+  background: linear-gradient(120deg, rgba(26, 221, 190, 0.88), rgba(0, 166, 240, 0.78));
+  color: #082032;
+  padding: 0.7rem 1rem;
+  border-radius: 0.8rem;
+  font-weight: 700;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(20, 120, 170, 0.2);
+}
+
+.btn-secondary {
+  border: 1px solid rgba(255, 156, 83, 0.6);
+  background: linear-gradient(120deg, rgba(255, 214, 158, 0.82), rgba(255, 166, 89, 0.86));
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+@keyframes panel-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.996);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.shadow-scanner {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 24px 38px rgba(20, 77, 117, 0.2);
+}
+
+::selection {
+  background: rgba(0, 144, 162, 0.24);
+}
+
+@media (max-width: 768px) {
+  .app-shell {
+    padding: 1.2rem 0.8rem 2rem;
+  }
+}
