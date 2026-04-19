@@ -9,7 +9,7 @@ export const envValidationSchema = Joi.object({
   PBKDF2_ITERATIONS: Joi.number().integer().min(100000).default(210000),
   PBKDF2_KEYLEN: Joi.number().integer().min(32).default(64),
   PBKDF2_DIGEST: Joi.string().default('sha512'),
-  ADMIN_EMAIL: Joi.string().email().default('awadaya18@gmail.com'),
+  ADMIN_EMAIL: Joi.string().email().required(),
   ADMIN_PASSWORD: Joi.string().min(8).required(),
   ADMIN_USER_ID: Joi.string().default('admin-awadaya18'),
   FIREBASE_PROJECT_ID: Joi.string().allow('').optional(),
