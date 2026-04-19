@@ -115,29 +115,11 @@ export class UsersService implements OnModuleInit {
   async ensureAdminUser(): Promise<void> {
     const adminUserId =
       this.configService.get<string>('ADMIN_USER_ID') ?? 'admin-awadaya18';
-    const adminEmail =
-      this.configService.get<string>('ADMIN_EMAIL') ?? 'awadaya18@gmail.com';
-    const adminPassword =
-      this.configService.get<string>('ADMIN_PASSWORD') ?? '1234554321';
-
-    const passwordPayload = this.hashingService.hashSecret(adminPassword);
-    const encryptedVector = this.vectorCryptoService.encryptVector(
-      this.getZeroVector(),
-    );
-    const adminDocument: UserDocument = {
-      userId: adminUserId,
-      email: adminEmail,
-      role: 'admin',
-      passwordHash: passwordPayload.hash,
-      passwordSalt: passwordPayload.salt,
-      passwordIterations: passwordPayload.iterations,
-      passwordKeylen: passwordPayload.keylen,
-      passwordDigest: passwordPayload.digest,
-      encryptedVector,
-    };
+    const adminEmail = this.configService.getOrThrow<string>('ADMIN_EMAIL');
+    const adminPassword = this.configService.getOrThrow<string>('ADMIN_PASSWORD');
 
     if (this.useInMemoryStore) {
-      this.ensureAdminInMemory(adminDocument);
+      this.ensureAdminInMemory(adminUserId, adminEmail, adminPassword);
       return;
     }
 
@@ -146,8 +128,70 @@ export class UsersService implements OnModuleInit {
       const snapshot = await adminDocRef.get();
 
       if (snapshot.exists) {
+        const existing = snapshot.data() as UserDocument;
+
+        const canVerifyExistingPassword =
+          !!existing.passwordHash &&
+          !!existing.passwordSalt &&
+          !!existing.passwordIterations &&
+          !!existing.passwordKeylen &&
+          !!existing.passwordDigest;
+
+        const matchesConfiguredPassword = canVerifyExistingPassword
+          ? this.hashingService.verifySecret(adminPassword, {
+              hash: existing.passwordHash!,
+              salt: existing.passwordSalt!,
+              iterations: existing.passwordIterations!,
+              keylen: existing.passwordKeylen!,
+              digest: existing.passwordDigest!,
+            })
+          : false;
+
+        if (
+          existing.role === 'admin' &&
+          existing.email === adminEmail &&
+          matchesConfiguredPassword
+        ) {
+          return;
+        }
+
+        const updatedPassword = this.hashingService.hashSecret(adminPassword);
+        await adminDocRef.set(
+          {
+            userId: adminUserId,
+            email: adminEmail,
+            role: 'admin',
+            passwordHash: updatedPassword.hash,
+            passwordSalt: updatedPassword.salt,
+            passwordIterations: updatedPassword.iterations,
+            passwordKeylen: updatedPassword.keylen,
+            passwordDigest: updatedPassword.digest,
+            encryptedVector:
+              existing.encryptedVector ??
+              this.vectorCryptoService.encryptVector(this.getZeroVector()),
+            updatedAt: this.firestoreService.serverTimestamp(),
+          },
+          { merge: true },
+        );
         return;
       }
+
+      const passwordPayload = this.hashingService.hashSecret(adminPassword);
+      const encryptedVector = this.vectorCryptoService.encryptVector(
+        this.getZeroVector(),
+      );
+
+      const adminDocument: UserDocument = {
+        userId: adminUserId,
+        email: adminEmail,
+        role: 'admin',
+        passwordHash: passwordPayload.hash,
+        passwordSalt: passwordPayload.salt,
+        passwordIterations: passwordPayload.iterations,
+        passwordKeylen: passwordPayload.keylen,
+        passwordDigest: passwordPayload.digest,
+        encryptedVector,
+      };
 
       await adminDocRef.set({
         ...adminDocument,
@@ -156,7 +200,7 @@ export class UsersService implements OnModuleInit {
       });
     } catch (error) {
       this.enableInMemoryFallback(error);
-      this.ensureAdminInMemory(adminDocument);
+      this.ensureAdminInMemory(adminUserId, adminEmail, adminPassword);
     }
   }
 
@@ -427,10 +471,52 @@ export class UsersService implements OnModuleInit {
     this.inMemoryUsers.delete(userId);
   }
 
-  private ensureAdminInMemory(adminDocument: UserDocument): void {
-    if (!this.inMemoryUsers.has(adminDocument.userId)) {
-      this.inMemoryUsers.set(adminDocument.userId, adminDocument);
+  private ensureAdminInMemory(
+    adminUserId: string,
+    adminEmail: string,
+    adminPassword: string,
+  ): void {
+    const existing = this.inMemoryUsers.get(adminUserId);
+
+    if (existing) {
+      const canVerifyExistingPassword =
+        !!existing.passwordHash &&
+        !!existing.passwordSalt &&
+        !!existing.passwordIterations &&
+        !!existing.passwordKeylen &&
+        !!existing.passwordDigest;
+
+      const matchesConfiguredPassword = canVerifyExistingPassword
+        ? this.hashingService.verifySecret(adminPassword, {
+            hash: existing.passwordHash!,
+            salt: existing.passwordSalt!,
+            iterations: existing.passwordIterations!,
+            keylen: existing.passwordKeylen!,
+            digest: existing.passwordDigest!,
+          })
+        : false;
+
+      if (
+        existing.role === 'admin' &&
+        existing.email === adminEmail &&
+        matchesConfiguredPassword
+      ) {
+        return;
+      }
     }
+
+    const passwordPayload = this.hashingService.hashSecret(adminPassword);
+    this.inMemoryUsers.set(adminUserId, {
+      userId: adminUserId,
+      email: adminEmail,
+      role: 'admin',
+      passwordHash: passwordPayload.hash,
+      passwordSalt: passwordPayload.salt,
+      passwordIterations: passwordPayload.iterations,
+      passwordKeylen: passwordPayload.keylen,
+      passwordDigest: passwordPayload.digest,
+      encryptedVector: this.vectorCryptoService.encryptVector(this.getZeroVector()),
+    });
   }
 
   private enableInMemoryFallback(reason: unknown): void {
