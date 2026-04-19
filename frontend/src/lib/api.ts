@@ -1,4 +1,8 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
+  (process.env.NODE_ENV === 'production'
+    ? 'https://backend-api-production-8aae.up.railway.app/api'
+    : '/api');
 
 type RequestOptions = {
   token?: string;
