@@ -20,6 +20,8 @@ This workspace implements your FYP software-first architecture while NIR hardwar
    - `FIREBASE_SERVICE_ACCOUNT_KEY` (JSON string)
    - `JWT_SECRET`
    - `VECTOR_ENCRYPTION_KEY_BASE64` (must decode to exactly 32 bytes)
+  - `ADMIN_EMAIL`
+  - `ADMIN_PASSWORD`
 4. Keep `backend/firestore.rules` as deny-all for direct client access when using server-only API access.
 
 ### Generate a 32-byte vector encryption key
@@ -48,10 +50,43 @@ npm run dev:frontend
 - Backend API: `http://localhost:4000/api`
 - Frontend UI: `http://localhost:3000`
 
+## 3.1) Deploy So It Stays Online 24/7
+If you close your laptop, local servers stop. To keep the project always available, deploy both apps to cloud hosts.
+
+### Backend (Render)
+Quick start option: this repo includes `render.yaml` at the root. In Render, choose **New > Blueprint** and point to this repo to prefill backend service settings.
+
+1. Push this project to GitHub.
+2. In Render, create a **Web Service** from your repo.
+3. Set **Root Directory** to `backend`.
+4. Set:
+  - Build Command: `npm install && npm run build`
+  - Start Command: `npm run start:prod`
+5. Add environment variables:
+  - `JWT_SECRET`
+  - `VECTOR_ENCRYPTION_KEY_BASE64`
+  - `ADMIN_EMAIL`
+  - `ADMIN_PASSWORD`
+  - `FRONTEND_ORIGIN` (set to your frontend URL, or comma-separated list for multiple domains)
+  - `FIREBASE_PROJECT_ID` (if using Firestore)
+  - `FIREBASE_SERVICE_ACCOUNT_KEY` (if using Firestore)
+6. Deploy and copy your backend URL, e.g. `https://your-backend.onrender.com/api`.
+
+### Frontend (Vercel)
+1. In Vercel, import the same GitHub repo.
+2. Set **Root Directory** to `frontend`.
+3. Add env var (see `frontend/.env.production.example`):
+  - `NEXT_PUBLIC_API_BASE_URL=https://your-backend.onrender.com/api`
+4. Deploy and copy your frontend URL, e.g. `https://your-app.vercel.app`.
+
+### Final CORS Update
+After frontend deployment, set backend `FRONTEND_ORIGIN` to your exact Vercel URL (or comma-separated URLs, including local if needed):
+```env
+FRONTEND_ORIGIN=https://your-app.vercel.app,http://localhost:3000
+```
+
 ## 4) Required Backend Behaviors Implemented
-- Admin account seeded in Firestore on backend startup:
-  - email: `awadaya18@gmail.com`
-  - password: `1234554321`
+- Admin account seeded in Firestore on backend startup using `ADMIN_EMAIL` and `ADMIN_PASSWORD` from environment variables (not hardcoded in UI).
 - `POST /api/auth/admin/login`
 - `POST /api/users/enroll`
   - Validates input
@@ -74,5 +109,4 @@ npm run dev:frontend
   - Success/Fail result
 
 ## Notes for FYP Demo
-- The admin credential is intentionally fixed to match your requirement for demonstration.
-- For production, move admin credential provisioning to secure secret management and rotate credentials.
+- Admin credentials are now environment-managed. Keep them only in server-side secrets and rotate regularly.
