@@ -100,6 +100,21 @@ export default function DashboardPage() {
     void loadDashboardData();
   }, [token, router]);
 
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void refreshUsers();
+      void refreshAuditLogs();
+    }, 10000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [token]);
+
   async function refreshAuditLogs() {
     if (!token) {
       return;
