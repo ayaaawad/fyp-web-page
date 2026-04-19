@@ -16,8 +16,8 @@ type LoginResponse = {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('awadaya18@gmail.com');
-  const [password, setPassword] = useState('1234554321');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,6 +65,7 @@ export default function LoginPage() {
             <input
               className="input"
               type="email"
+              placeholder="Enter admin email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
@@ -76,6 +77,7 @@ export default function LoginPage() {
             <input
               className="input"
               type="password"
+              placeholder="Enter admin password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
